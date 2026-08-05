@@ -2,7 +2,6 @@
 
 An end-to-end Machine Learning project that predicts customer churn for a telecom company using multiple classification algorithms. The project includes an interactive Streamlit dashboard with Exploratory Data Analysis (EDA), customer churn prediction, explainable AI (SHAP), statistical analysis, and business recommendations.
 
----
 
 ## 🚀 Features
 
@@ -16,7 +15,6 @@ An end-to-end Machine Learning project that predicts customer churn for a teleco
 - Feature Engineering
 - User-friendly Streamlit Interface
 
----
 
 ## 🛠️ Tech Stack
 
@@ -28,9 +26,9 @@ An end-to-end Machine Learning project that predicts customer churn for a teleco
 - **Dashboard:** Streamlit
 - **Model Persistence:** Joblib
 
----
 
 ## 📂 Project Structure
+```
 customer-churn-prediction/
 │
 ├── app_streamlit.py              # Streamlit Dashboard
@@ -53,16 +51,13 @@ customer-churn-prediction/
 │
 └── utils/
     └── recommendations.py
-
----
+```
 
 ## 📌 Problem Statement
 
 Customer churn is one of the biggest challenges faced by telecom companies. Losing existing customers directly impacts revenue and increases customer acquisition costs.
 
 The objective of this project is to identify customers who are likely to churn so that the business can take proactive retention measures.
-
----
 
 ## 📊 Dataset
 
@@ -84,7 +79,6 @@ The dataset contains customer information such as:
 Source:
 https://www.kaggle.com/datasets/blastchar/telco-customer-churn
 
----
 
 ## ⚙️ Feature Engineering
 
@@ -97,7 +91,6 @@ The following engineered features were created to improve model performance:
 
 These features help capture customer behavior beyond the original dataset.
 
----
 
 ## 🤖 Machine Learning Models
 
@@ -109,7 +102,6 @@ The project compares multiple machine learning algorithms:
 
 The best-performing model is automatically selected using cross-validation.
 
----
 
 ## 📈 Dashboard Modules
 
@@ -120,7 +112,6 @@ The best-performing model is automatically selected using cross-validation.
 - Monthly Charges vs Churn
 - Tenure Distribution
 
----
 
 ### 🔮 Prediction
 
@@ -131,7 +122,6 @@ Users can enter customer information to:
 - Receive business recommendations
 - Understand prediction using SHAP Explainability
 
----
 
 ### 📉 Model Performance
 
@@ -145,7 +135,6 @@ The dashboard displays:
 - Confusion Matrix
 - ROC Curve
 
----
 
 ### 📋 Statistical Analysis
 
@@ -153,7 +142,6 @@ Chi-Square tests are performed on important categorical variables to determine w
 
 Business interpretations and recommendations are also provided for each analysis.
 
----
 
 ## 💡 Business Recommendations
 
@@ -164,8 +152,6 @@ Based on the predicted churn probability, the application suggests customer rete
 - Provide loyalty rewards
 - Offer personalized customer support
 - Create bundled family plans
-
----
 
 ## 🔍 Explainable AI
 
@@ -213,7 +199,6 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
----
 
 ## ▶️ Run the Project
 
