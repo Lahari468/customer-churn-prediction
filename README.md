@@ -157,7 +157,6 @@ Based on the predicted churn probability, the application suggests customer rete
 
 The dashboard uses **SHAP (SHapley Additive Explanations)** to explain model predictions by identifying the features that contribute most to customer churn.
 
----
 
 ## ▶️ Installation
 
