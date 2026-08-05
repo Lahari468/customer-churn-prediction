@@ -206,49 +206,70 @@ with tab2:
                 """
             )
 
-        # ==========================================
-        # BUSINESS RECOMMENDATIONS
-        # ==========================================
+            # ==========================================
+            # BUSINESS RECOMMENDATIONS
+            # ==========================================
 
-        st.write("---")
-        st.subheader("💡 Recommended Business Actions")
+            st.write("---")
+            st.subheader("💡 Recommended Business Actions")
 
-        recommendations = generate_recommendations(
-            user_df.iloc[0],
-            prob
-        )
-
-        for rec in recommendations:
-            st.success(rec)
-
-        # ==========================================
-        # SHAP EXPLANATION
-        # ==========================================
-
-        st.write("---")
-        st.subheader("🔍 Why this prediction?")
-
-        try:
-
-            shap_values = explainer(encoded)
-
-            fig = plt.figure(figsize=(10,6))
-
-            shap.plots.waterfall(
-                shap_values[0],
-                max_display=10,
-                show=False
+            recommendations = generate_recommendations(
+                user_df.iloc[0],
+                prob
             )
 
-            st.pyplot(fig)
+            for rec in recommendations:
+                st.success(rec)
 
-        except Exception as e:
+            # ==========================================
+            # ENGINEERED FEATURES
+            # ==========================================
 
-            st.warning(
-                "Unable to generate SHAP explanation."
-            )
+            st.write("---")
+            st.subheader("⚙️ Engineered Features")
 
-            st.code(str(e))
+            engineered_df = pd.DataFrame({
+                "Feature": [
+                    "Average Monthly Spend",
+                    "New Customer",
+                    "High Bill",
+                    "Long-Term Customer"
+                ],
+                "Value": [
+                    f"{user_df['AverageMonthlySpend'].iloc[0]:.2f}",
+                    "Yes" if user_df["NewCustomer"].iloc[0] else "No",
+                    "Yes" if user_df["HighBill"].iloc[0] else "No",
+                    "Yes" if user_df["LongTermCustomer"].iloc[0] else "No"
+                ]
+            })
+
+            st.table(engineered_df)
+
+            # ==========================================
+            # SHAP EXPLANATION
+            # ==========================================
+
+            st.write("---")
+            st.subheader("🔍 Why this prediction?")
+
+            try:
+
+                shap_values = explainer(encoded)
+
+                fig = plt.figure(figsize=(10,6))
+
+                shap.plots.waterfall(
+                    shap_values[0],
+                    max_display=10,
+                    show=False
+                )
+
+                st.pyplot(fig)
+
+            except Exception as e:
+
+                st.warning("Unable to generate SHAP explanation.")
+                st.code(str(e))
 
 # =====================================================================
 # TAB 3 — MODEL PERFORMANCE
