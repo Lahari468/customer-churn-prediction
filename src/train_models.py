@@ -1,5 +1,5 @@
 import os
-
+from preprocessing import load_and_preprocess
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
 from xgboost import XGBClassifier
@@ -59,3 +59,12 @@ def train_best_model(X_train, y_train):
     joblib.dump(explainer, "models/shap_explainer.pkl")
 
     return best_model
+
+if __name__ == "__main__":
+
+    X_train, X_test, y_train, y_test = load_and_preprocess()
+
+    train_best_model(
+        X_train,
+        y_train
+    )

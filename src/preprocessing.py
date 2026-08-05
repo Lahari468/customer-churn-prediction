@@ -17,23 +17,50 @@ def load_and_preprocess(path="data/WA_Fn-UseC_-Telco-Customer-Churn.csv"):
     df.replace(" ", np.nan, inplace=True)
     df["TotalCharges"] = pd.to_numeric(df["TotalCharges"], errors="coerce")
     df.dropna(inplace=True)
+    # ====================================================
+    # FEATURE ENGINEERING
+    # ====================================================
+
+    df["AverageMonthlySpend"] = (
+        df["TotalCharges"] / (df["tenure"] + 1)
+    )
+
+    df["NewCustomer"] = (
+        df["tenure"] < 6
+    ).astype(int)
+
+    df["HighBill"] = (
+        df["MonthlyCharges"] > 80
+    ).astype(int)
+
+    df["LongTermCustomer"] = (
+        df["tenure"] >= 24
+    ).astype(int)
 
     # target
     df["Churn"] = df["Churn"].map({"Yes": 1, "No": 0})
 
     # keep ONLY features that app collects
     df = df[[
-        "gender",
-        "SeniorCitizen",
-        "Partner",
-        "Dependents",
-        "tenure",
-        "MonthlyCharges",
-        "TotalCharges",
-        "Contract",
-        "InternetService",
-        "Churn"
-    ]]
+    "gender",
+    "SeniorCitizen",
+    "Partner",
+    "Dependents",
+
+    "tenure",
+    "MonthlyCharges",
+    "TotalCharges",
+
+    "AverageMonthlySpend",
+    "NewCustomer",
+    "HighBill",
+    "LongTermCustomer",
+
+    "Contract",
+    "InternetService",
+
+    "Churn"
+]]
 
     # one-hot encode
     df = pd.get_dummies(df, drop_first=True)
@@ -43,7 +70,7 @@ def load_and_preprocess(path="data/WA_Fn-UseC_-Telco-Customer-Churn.csv"):
     y = df["Churn"]
 
     # scale numeric
-    numeric_cols = ["tenure", "MonthlyCharges", "TotalCharges"]
+    numeric_cols = ["tenure", "MonthlyCharges", "TotalCharges","AverageMonthlySpend"]
     scaler = StandardScaler()
     X[numeric_cols] = scaler.fit_transform(X[numeric_cols])
 

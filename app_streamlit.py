@@ -4,6 +4,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import joblib
 import shap
+from scipy.stats import chi2_contingency
 from sklearn.metrics import (
     confusion_matrix,
     roc_curve,
@@ -27,7 +28,7 @@ sns.set_style("whitegrid")
 model = joblib.load("models/best_model.pkl")
 feature_cols = joblib.load("models/feature_columns.pkl")
 scaler = joblib.load("models/scaler.pkl")
-explainer = joblib.load("models/shap_explainer.pkl")
+explainer = shap.Explainer(model)
 raw_df = pd.read_csv("data/WA_Fn-UseC_-Telco-Customer-Churn.csv")
 
 st.markdown(
@@ -40,8 +41,9 @@ st.markdown(
 )
 
 # ================== TABS ==================
-tab1, tab2, tab3 = st.tabs(
-    ["📊 EDA Dashboard", "🔮 Prediction", "📉 Model Performance"]
+tab1, tab2, tab3,tab4 = st.tabs(
+    ["📊 EDA Dashboard", "🔮 Prediction", "📉 Model Performance", "📈 Statistical Analysis"
+]
 )
 
 # =====================================================================
@@ -136,6 +138,20 @@ with tab2:
         "InternetService": internet
     }])
 
+    # ====================================================
+    # Feature Engineering
+    # ====================================================
+
+    user_df["AverageMonthlySpend"] = (
+        total / (tenure + 1)
+    )
+
+    user_df["NewCustomer"] = int(tenure < 6)
+
+    user_df["HighBill"] = int(monthly > 80)
+
+    user_df["LongTermCustomer"] = int(tenure >= 24)
+
     # -----------------------------
     # Encoding
     # -----------------------------
@@ -151,7 +167,8 @@ with tab2:
     num_cols = [
         "tenure",
         "MonthlyCharges",
-        "TotalCharges"
+        "TotalCharges",
+        "AverageMonthlySpend"
     ]
 
     encoded[num_cols] = scaler.transform(
@@ -213,7 +230,7 @@ with tab2:
 
         try:
 
-            shap_values = explainer.shap_values(encoded)
+            shap_values = explainer(encoded)
 
             fig = plt.figure(figsize=(10,6))
 
@@ -241,10 +258,20 @@ with tab3:
     st.subheader("📉 Model Performance Metrics")
 
     df = raw_df.copy()
+
     df["TotalCharges"] = pd.to_numeric(df["TotalCharges"], errors="coerce")
     df.dropna(inplace=True)
     df["Churn"] = df["Churn"].map({"Yes": 1, "No": 0})
 
+    # ======================================================
+    # Feature Engineering (MUST match training)
+    # ======================================================
+    df["AverageMonthlySpend"] = df["TotalCharges"] / (df["tenure"] + 1)
+    df["NewCustomer"] = (df["tenure"] < 6).astype(int)
+    df["HighBill"] = (df["MonthlyCharges"] > 80).astype(int)
+    df["LongTermCustomer"] = (df["tenure"] >= 24).astype(int)
+
+    # Keep only required columns
     df = df[
         [
             "gender",
@@ -254,19 +281,39 @@ with tab3:
             "tenure",
             "MonthlyCharges",
             "TotalCharges",
+            "AverageMonthlySpend",
+            "NewCustomer",
+            "HighBill",
+            "LongTermCustomer",
             "Contract",
             "InternetService",
             "Churn",
         ]
     ]
 
+    # One-hot encoding
     df = pd.get_dummies(df, drop_first=True)
 
-    X = df.drop("Churn", axis=1)
+    # Add missing columns expected by the model
+    for col in feature_cols:
+        if col not in df.columns:
+            df[col] = 0
+
+    # Arrange columns exactly as during training
+    X = df[feature_cols]
     y = df["Churn"]
 
-    num_cols = ["tenure", "MonthlyCharges", "TotalCharges"]
+    # Scale numerical columns
+    num_cols = [
+        "tenure",
+        "MonthlyCharges",
+        "TotalCharges",
+        "AverageMonthlySpend",
+    ]
+
     X[num_cols] = scaler.transform(X[num_cols])
+
+    # Predictions
     y_pred = model.predict(X)
     y_prob = model.predict_proba(X)[:, 1]
 
@@ -311,3 +358,108 @@ with tab3:
     plt.title("ROC Curve")
     plt.legend()
     st.pyplot(fig)
+
+# =====================================================================
+# TAB 4 — STATISTICAL ANALYSIS
+# =====================================================================
+def chi_square_test(df, feature):
+
+    contingency = pd.crosstab(df[feature], df["Churn"])
+
+    chi2, p, dof, expected = chi2_contingency(contingency)
+
+    st.write(f"## {feature} vs Churn")
+
+    st.dataframe(contingency)
+
+    col1, col2 = st.columns(2)
+
+    col1.metric("Chi-Square", f"{chi2:.2f}")
+    col2.metric("P-value", f"{p:.5f}")
+
+    if p < 0.05:
+        st.success(
+            f"✅ {feature} has a statistically significant relationship with churn."
+        )
+    else:
+        st.warning(
+            f"❌ {feature} is not statistically significant."
+        )
+
+    # ===============================
+    # Business Interpretation
+    # ===============================
+
+    if feature == "Contract":
+        st.info("""
+**Business Insight**
+
+Customers on **month-to-month contracts** churn much more frequently than customers on yearly contracts.
+
+**Recommendation**
+
+Offer discounts or loyalty benefits for long-term subscriptions.
+""")
+
+    elif feature == "InternetService":
+        st.info("""
+**Business Insight**
+
+Customers using **Fiber Optic Internet** have a higher churn rate.
+
+**Recommendation**
+
+Investigate pricing, network quality, and customer support for fiber users.
+""")
+
+    elif feature == "SeniorCitizen":
+        st.info("""
+**Business Insight**
+
+Senior citizens show a different churn pattern compared to other customers.
+
+**Recommendation**
+
+Provide dedicated customer support and simplified service plans.
+""")
+
+    elif feature == "Partner":
+        st.info("""
+**Business Insight**
+
+Customers without partners tend to churn more often.
+
+**Recommendation**
+
+Introduce family plans or bundled offers to improve customer retention.
+""")
+
+    st.write("---")
+
+
+with tab4:
+
+    st.subheader("📈 Statistical Analysis")
+
+    st.write(
+        """
+        Statistical tests help determine whether customer attributes
+        have a significant relationship with customer churn.
+        """
+    )
+
+    # Prepare dataset
+    df = raw_df.copy()
+
+    df["TotalCharges"] = pd.to_numeric(
+        df["TotalCharges"],
+        errors="coerce"
+    )
+
+    df.dropna(inplace=True)
+
+    # Chi-Square Tests
+    chi_square_test(df, "Contract")
+    chi_square_test(df, "InternetService")
+    chi_square_test(df, "SeniorCitizen")
+    chi_square_test(df, "Partner")
