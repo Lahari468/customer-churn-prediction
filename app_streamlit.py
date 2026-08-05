@@ -350,7 +350,7 @@ with tab3:
 
     fpr, tpr, _ = roc_curve(y, y_prob)
 
-    fig = plt.figure(figsize=(6,4))
+    fig = plt.figure(figsize=(5,4))
     plt.plot(fpr, tpr, label=f"AUC = {roc_auc:.2f}")
     plt.plot([0,1], [0,1], linestyle="--")
     plt.xlabel("False Positive Rate")

@@ -4,5 +4,3 @@ __pycache__/
 *.log
 .DS_Store
 
-# model binaries (optional)
-models/*.pkl
